@@ -16,6 +16,11 @@
 #' @export
 predict_from_coefs <- function(dat, response, coefs){
 
+  response <- dat %>% pull({{response}})
+
+
+
+
 
 
 

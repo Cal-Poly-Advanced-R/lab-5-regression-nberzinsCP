@@ -71,9 +71,23 @@ simple_linear_regression <- function(dat, response, explanatory, method = NULL){
 #'@export
 multiple_linear_regression <- function(dat, response, method = NULL) {
 
+  y <- dat %>% pull({{response}})
 
+  explanatory <- dat %>%
+    select(-{{response}})
 
-  results <- 0 ### This should be a data frame, with columns named
+  x <- as.matrix(explanatory)
+
+  x_with_ones <- cbind(1, x)
+
+  x_crossprod_inverse <- solve(crossprod(x_with_ones))
+  x_by_y <- t(x_with_ones) %*% y
+
+  a <- as.data.frame(t(x_crossprod_inverse %*% x_by_y)) #transposed for formatting purposes
+
+  colnames(a)[1] <- "Intercept"
+
+  results <- a ### This should be a data frame, with columns named
                 ### "Intercept" and the same variable names as dat.
 
   return(results)

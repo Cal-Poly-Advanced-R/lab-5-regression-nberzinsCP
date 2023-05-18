@@ -30,5 +30,3 @@ test_that("multiple linear regression is correct", {
 
 
 })
-
-
