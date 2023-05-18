@@ -35,6 +35,8 @@ ridge_regression <- function(dat, response, lambda) {
   results <- data.frame("Intercept" = coef_matrix[1], as.list(coef_matrix[-1]), "lambda" = lambda)
 
   return(results)
+
+  #Refrenced Chat GPT
 }
 
 
@@ -83,6 +85,8 @@ find_best_lambda <- function(train_dat, test_dat, response, lambdas) {
   }
 
   return(lambda_errors)
+
+  #Refrenced Chat GPT
 }
 
 
