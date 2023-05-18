@@ -16,12 +16,21 @@
 #' @export
 predict_from_coefs <- function(dat, response, coefs){
 
-  response <- dat %>% pull({{response}})
+  y <- dat %>% pull({{response}})
 
+  explanatory <- dat %>%
+    select(-{{response}})
 
+  x <- as.matrix(explanatory)
 
+  x_with_ones <- cbind(1, x)
 
+  x_with_ones
 
+  predicted <- x_with_ones %*% t(as.matrix(coefs)) #reformatted from being transposed
 
+  result <- data.frame(True = y, Predicted = predicted)
+
+  return(result)
 
 }
