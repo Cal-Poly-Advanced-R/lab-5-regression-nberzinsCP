@@ -24,11 +24,18 @@ simple_linear_regression <- function(dat, response, explanatory, method = NULL){
 
   ### Edit code after here
 
-  sd_x <- 1
-  sd_y <- 1
+  sd_x <- sd(x)
+  sd_y <- sd(y)
 
-  beta_0 <- 1
-  beta_1 <- 1
+  x_with_ones <- cbind(1, x) #works as intended
+
+  x_crossprod_inverse <- solve(crossprod(x_with_ones))
+  x_by_y <- t(x_with_ones) %*% y
+
+  a <- x_crossprod_inverse %*% x_by_y
+
+  beta_0 <- a[1]
+  beta_1 <- a[2]
 
   ### Stop editing
 
