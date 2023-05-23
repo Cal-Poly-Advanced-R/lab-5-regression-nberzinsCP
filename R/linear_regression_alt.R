@@ -4,58 +4,74 @@
 #' @param response The name of a response variable in the data frame (unquoted)
 #' @param explanatory The name of the explanatory variable in the data frame (unquoted)
 #'
-#' @return A data frame of coefficients
+#' @return A list containing coefficients, final_slope, and final_intercept
 #'
 #' @import dplyr
 #'
 #' @export
 
-slr_gd <- function(dat, response, explanatory){
+slr_gd <- function(dat, response, explanatory) {
+  # Filters numeric variables
+  vars_numeric <- sapply(dat, is.numeric)
+  data_numeric <- dat[, vars_numeric]
 
-  ### Compute coefficients by gradient descent
-  ### Return a data frame of the same form as in the `simple_linear_regression`
+  # Extract the response/explanatory variables
+  y <- data_numeric[, response]
+  X <- data_numeric[, explanatory]
 
-    # Filters numeric variables
-    vars_numeric <- sapply(dat, is.numeric)
-    data_numeric <- dat[, vars_numeric]
+  # Standardized vals
+  X_mean <- mean(X)
+  X_sd <- sd(X)
+  X <- (X - X_mean) / X_sd
 
-    # Extract the response/explanatory variables
-    y <- data_numeric[, response]
-    X <- data_numeric[, explanatory]
+  # Initializes intercept/slope/learning rate/max_iterations variables
+  intercept <- 0
+  slope <- 0
+  learning_rate <- 0.01
+  max_iterations <- 10000
 
-    # Initializes intercept/slope/learning rate/max_interations variables
-    intercept <- 0
-    slope <- 0
-    learning_rate <- 0.01
-    max_interations <- 1000
+  # Create dataframe that's going to be returned
+  coefficients <- data.frame(
+    iteration = integer(max_iterations),
+    slope = double(max_iterations),
+    intercept = double(max_iterations)
+  )
 
-    # Create dataframe thats gonna be returned
-    coefficients <- data.frame(iteration = integer(max_interations),
-                               slope = double(max_interations),
-                               intercept = double(max_interations))
+  # Loop for # iterations
+  for (iteration in 1:max_iterations) {
+    # predictions
+    y_pred <- intercept + slope * X
 
-    # Gradient descent iterations
-    for (iteration in 1:max_interations) {
+    # gradients
+    gradient_slope <- (-2 / length(y)) * sum(X * (y - y_pred))  # Corrected
+    gradient_intercept <- (-2 / length(y)) * sum(y - y_pred)  # Corrected
 
-      # predictions
-      y_pred <- slope + intercept * X
+    # Update
+    slope_new <- slope - learning_rate * gradient_slope
+    intercept_new <- intercept - learning_rate * gradient_intercept
 
-      # gradients
-      gradient_slope <- (1 / length(y)) * sum(y_pred - y)
-      gradient_intercept <- (1 / length(y)) * sum((y_pred - y) * X)
+    # Update slope and intercept
+    slope <- slope_new
+    intercept <- intercept_new
 
-      # Update
-      slope <- slope - learning_rate * gradient_slope
-      intercept <- intercept - learning_rate * gradient_intercept
-
-      # Stores into dataframe
-      coefficients[iteration, ] <- c(iteration, slope, intercept)
-      results <- coefficients
-    }
-
-    return(results)
-    #Refrenced Chat GPT
+    # Stores into dataframe
+    coefficients[iteration, ] <- c(iteration, slope, intercept)
   }
+
+  # Set the final intercept and slope
+  final_slope <- slope
+  final_intercept <- intercept
+
+  # Unstandardizes
+  final_slope <- final_slope / X_sd
+  final_intercept <- (final_intercept) + mean(y) / 2
+
+  # Return list
+  return(list(coefficients = coefficients, final_slope = final_slope, final_intercept = final_intercept))
+
+  #Refrenced Chat GPT
+}
+
 
 
 
@@ -80,53 +96,49 @@ slr_gd <- function(dat, response, explanatory){
 
 mlr_gd <- function(dat, response) {
 
-  # Filters numeric variables
-  numeric_vars <- sapply(dat, is.numeric)
-  data_numeric <- dat[, numeric_vars]
+  # Extract the response/explanatory variables
+  y <- dat[[response]]
+  X <- as.matrix(dat[, !colnames(dat) %in% response])
 
-  # Extract response/explanatory variables
-  y <- data_numeric[, response]
-  X <- data_numeric[, !colnames(data_numeric) %in% response]
+  # Standardizes vals
+  X_mean <- colMeans(X)
+  X_sd <- apply(X, 2, sd)
+  X <- scale(X)
 
-  # Initializes coefficients/learning_rate/max_interations rate variables
-  num_explanatory_vars <- ncol(X)
-  coefficients <- c(rep(0, num_explanatory_vars + 1))
-  learning_rate <- 0.01
-  max_interations <- 1000
+  # Initialize coefficients/learning rate/max_iterations
+  coefficients <- rep(0, ncol(X))
+  learning_rate <- 0.001
+  max_iterations <- 10000
 
-  # Create dataframe thats gonna be returned
-  coefficients_store <- data.frame(iteration = integer(max_interations))
+  # Loop for # iterations
+  for (iteration in 1:max_iterations) {
+    # Compute predictions
+    y_pred <- X %*% coefficients
 
-  for (i in 1:(num_explanatory_vars + 1)) {
-    coefficients_store[paste0("theta", i - 1)] <- double(max_interations)
+    # Compute gradients
+    gradients <- (2 / length(y)) * t(X) %*% (y_pred - y)
+
+    # Update coefficients
+    coefficients_new <- coefficients - learning_rate * gradients
+
+    #Store
+    coefficients <- coefficients_new
   }
 
-  # Gradient descent iterations
-  for (iteration in 1:max_interations) {
-    # Add intercept variable to the explanatory variables
-    X_intercept <- cbind(1, X)
+  # Unstandardizes
+  coefficients <- coefficients / X_sd
+  intercept <- mean(y) - sum(X_mean * coefficients)
 
-    # predictions
-    y_pred <- sum(coefficients * X_intercept)
+  # Return list
+  return(list(coefficients = c(intercept, coefficients), final_coefficients = coefficients, final_intercept = intercept))
 
-    # gradients
-    gradients <- (1 / length(y)) * c(sum(y_pred - y), colSums((y_pred - y) * X_intercept))
-
-    # Update
-    coefficients <- coefficients - learning_rate * gradients
-
-    # Store into dataframe
-    coefficients_store[iteration, ] <- c(iteration, coefficients)
-    results <- coefficients_store
-  }
-
-  return(results)
   #Refrenced Chat GPT
 }
 
 
 
-
+#coefficients <- coefficients / X_sd
+#final_intercept <- (final_intercept) + mean(y) / 2
 
 #' Implements linear regression with many predictors by matrix decomposition
 #'

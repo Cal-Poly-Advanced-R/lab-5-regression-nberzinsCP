@@ -13,7 +13,7 @@ find_best_lambda(train_dat, test_dat, response, lambdas)
 
 \item{response}{The name of a response variable in the data frame (unquoted)}
 
-\item{lambda}{A vector of penalty terms to try}
+\item{lambdas}{A vector of penalty terms to try}
 }
 \value{
 A data frame of penalty terms and resulting errors

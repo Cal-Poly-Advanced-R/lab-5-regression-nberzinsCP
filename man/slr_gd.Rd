@@ -14,7 +14,7 @@ slr_gd(dat, response, explanatory)
 \item{explanatory}{The name of the explanatory variable in the data frame (unquoted)}
 }
 \value{
-A data frame of coefficients
+A list containing coefficients, final_slope, and final_intercept
 }
 \description{
 Implements simple linear regression by gradient descent
