@@ -31,11 +31,12 @@ slr_gd <- function(dat, response, explanatory) {
   max_iterations <- 10000
 
   # Create dataframe that's going to be returned
-  coefficients <- data.frame(
-    iteration = integer(max_iterations),
-    slope = double(max_iterations),
-    intercept = double(max_iterations)
-  )
+  coefficients <- data.frame(iteration = integer(max_iterations),
+                             slope = double(max_iterations),
+                             intercept = double(max_iterations)
+                             )
+
+  gradient_slope <- c()
 
   # Loop for # iterations
   for (iteration in 1:max_iterations) {
@@ -43,11 +44,11 @@ slr_gd <- function(dat, response, explanatory) {
     y_pred <- intercept + slope * X
 
     # gradients
-    gradient_slope <- (-2 / length(y)) * sum(X * (y - y_pred))  # Corrected
+    gradient_slope[iteration] <- (-2 / length(y)) * sum(X * (y - y_pred))  # Corrected
     gradient_intercept <- (-2 / length(y)) * sum(y - y_pred)  # Corrected
 
     # Update
-    slope_new <- slope - learning_rate * gradient_slope
+    slope_new <- slope - learning_rate * gradient_slope[iteration]
     intercept_new <- intercept - learning_rate * gradient_intercept
 
     # Update slope and intercept
@@ -55,7 +56,13 @@ slr_gd <- function(dat, response, explanatory) {
     intercept <- intercept_new
 
     # Stores into dataframe
-    coefficients[iteration, ] <- c(iteration, slope, intercept)
+    coefficients[iteration, ] <- c(iteration,
+                                   slope,
+                                   intercept)
+
+    if(gradient_slope[iteration] <= .00001){
+      break
+    }
   }
 
   # Set the final intercept and slope
@@ -67,7 +74,10 @@ slr_gd <- function(dat, response, explanatory) {
   final_intercept <- (final_intercept) + mean(y) / 2
 
   # Return list
-  return(list(coefficients = coefficients, final_slope = final_slope, final_intercept = final_intercept))
+  return(list(coefficients = coefficients,
+              final_slope = final_slope,
+              final_intercept = final_intercept,
+              gradient_slope = gradient_slope))
 
   #Refrenced Chat GPT
 }
@@ -107,8 +117,9 @@ mlr_gd <- function(dat, response) {
 
   # Initialize coefficients/learning rate/max_iterations
   coefficients <- rep(0, ncol(X))
-  learning_rate <- 0.001
+  learning_rate <- 0.01
   max_iterations <- 10000
+  gradients <- c()
 
   # Loop for # iterations
   for (iteration in 1:max_iterations) {
@@ -116,13 +127,17 @@ mlr_gd <- function(dat, response) {
     y_pred <- X %*% coefficients
 
     # Compute gradients
-    gradients <- (2 / length(y)) * t(X) %*% (y_pred - y)
+    gradients[iteration] <- (2 / length(y)) * t(X) %*% (y_pred - y)
 
     # Update coefficients
-    coefficients_new <- coefficients - learning_rate * gradients
+    coefficients_new <- coefficients - learning_rate * gradients[iteration]
 
     #Store
     coefficients <- coefficients_new
+
+    if(gradients[iteration] <= .00001){
+      break
+    }
   }
 
   # Unstandardizes
@@ -130,7 +145,11 @@ mlr_gd <- function(dat, response) {
   intercept <- mean(y) - sum(X_mean * coefficients)
 
   # Return list
-  return(list(coefficients = c(intercept, coefficients), final_coefficients = coefficients, final_intercept = intercept))
+  return(list(coefficients = c(intercept,
+                               coefficients),
+              final_coefficients = coefficients,
+              final_intercept = intercept,
+              gradients = gradients))
 
   #Refrenced Chat GPT
 }
